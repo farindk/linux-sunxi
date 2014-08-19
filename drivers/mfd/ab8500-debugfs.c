@@ -1384,8 +1384,6 @@ static struct ab8500_register_dump
 	u8 value;
 } ab8500_complete_register_dump[DUMP_MAX_REGS];
 
-//extern int prcmu_abb_read(u8 slave, u8 reg, u8 *value, u8 size);
-
 /* This shall only be called upon kernel panic! */
 void ab8500_dump_all_banks_to_mem(void)
 {

@@ -38,9 +38,8 @@
 #define PWM_RDY_OFF		1
 #define PWM_RDY(x)		BIT(PWM_RDY_BASE + PWM_RDY_OFF * (x))
 
-#define PWM_PRD_ACT_MASK	GENMASK(7, 0)
 #define PWM_PRD(x)		((x - 1) << 16)
-#define PWM_PRD_MASK		GENMASK(7, 0)
+#define PWM_PRD_MASK		GENMASK(15, 0)
 
 #define	BIT_CH(bit, chan)	(bit << (chan * PWMCH_OFFSET))
 
@@ -87,7 +86,7 @@ static int sunxi_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 
 	/* First, test without any divider */
 	i = PWM_PRESCAL_MASK;
-	div = clk_rate * period_ns;
+	div = clk_rate * (u64)period_ns;
 	do_div(div, 1000000000);
 	if (div > PWM_PRD_MASK) {
 		/* Then go up from the first divider */
@@ -102,7 +101,7 @@ static int sunxi_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 		}
 	}
 
-	if (div > PWM_PRD_MASK) {
+	if (div-1 > PWM_PRD_MASK) {
 		dev_err(chip->dev, "prescaler exceeds the maximum value\n");
 		return -EINVAL;
 	}
@@ -135,7 +134,7 @@ static int sunxi_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 
 	val = sunxi_pwm_readl(sunxi_pwm, PWM_CTRL_REG);
 	val &= ~BIT_CH(PWM_PRESCAL_MASK, pwm->hwpwm);
-	val |= i;
+	val |= BIT_CH(i, pwm->hwpwm);
 	sunxi_pwm_writel(sunxi_pwm, PWM_CTRL_REG, val);
 
 	sunxi_pwm_writel(sunxi_pwm, PWM_CH_PRD(pwm->hwpwm), dty | PWM_PRD(prd));
